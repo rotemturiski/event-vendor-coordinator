@@ -105,6 +105,55 @@ export const AGENDA_KIND = {
   logistics: { label: 'Logistics', iconName: 'Luggage', tone: 'stone' },
 }
 
+// ── Timeline tracks (the multi-track "video-editor" agenda) ─────────────────
+// Every block carries an optional `track` (default 'main') + `dur` minutes
+// (default 60). Three parallel lanes line up on one shared time axis.
+export const TRACKS = [
+  { key: 'main', label: 'Main', iconName: 'Compass', desc: 'Guest-facing schedule' },
+  { key: 'shadow', label: 'Ops', iconName: 'Wrench', desc: 'Behind the scenes — staff & vendors' },
+  { key: 'reminder', label: 'Reminders', iconName: 'Bell', desc: 'Notifications to send' },
+]
+export const DEFAULT_DUR = 60
+
+export function timeToMin(t) {
+  const [h, m] = String(t || '0:0').split(':').map((x) => parseInt(x, 10) || 0)
+  return Math.max(0, Math.min(1439, h * 60 + m))
+}
+export function minToTime(m) {
+  const x = Math.max(0, Math.min(1439, Math.round(m)))
+  return `${String(Math.floor(x / 60)).padStart(2, '0')}:${String(x % 60).padStart(2, '0')}`
+}
+
+// Derive (never store) the reminder bars for one day, from the day's own Main
+// blocks plus any vendor deadline that lands on that calendar date.
+export function autoReminders(dayBlocks = [], dayIndex = 0, retreat = {}) {
+  const out = []
+  const date = retreat.startDate ? addDays(retreat.startDate, dayIndex) : null
+  const nights = Math.max(0, daysBetween(retreat.startDate, retreat.endDate) || 0)
+  const lastDay = nights > 0 ? nights : 2 // 0-based index of the final day
+
+  // 15 min before each Main session/activity
+  dayBlocks
+    .filter((b) => (b.track || 'main') === 'main' && (b.kind === 'session' || b.kind === 'activity'))
+    .forEach((b) => {
+      const start = timeToMin(b.t) - 15
+      if (start >= 0) out.push({ id: `auto-pre-${b.t}-${b.label}`, t: minToTime(start), dur: 15, label: `Remind: ${b.label}`, kind: 'reminder', track: 'reminder', auto: true })
+    })
+
+  // evening "send tomorrow's plan" (every day except the last)
+  if (dayIndex < lastDay) out.push({ id: 'auto-tomorrow', t: '21:00', dur: 30, label: 'Send tomorrow’s schedule to guests', kind: 'reminder', track: 'reminder', auto: true })
+
+  // vendor deadlines that fall on this date
+  if (date) {
+    (retreat.vendors || []).forEach((v) => {
+      if (deadlineFor(retreat.startDate, v.daysBefore) === date) {
+        out.push({ id: `auto-vendor-${v.id}`, t: '09:00', dur: 30, label: `Follow up: ${v.deliverable} — ${v.name}`, kind: 'reminder', track: 'reminder', auto: true })
+      }
+    })
+  }
+  return out.sort((a, b) => timeToMin(a.t) - timeToMin(b.t))
+}
+
 export function catById(key) {
   return CATEGORIES.find((c) => c.key === key) || CATEGORIES[CATEGORIES.length - 1]
 }

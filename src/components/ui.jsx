@@ -7,7 +7,7 @@ import {
   Menu, X, Lightbulb, Inbox, Building2, HeartHandshake, Bus, Palette, Package, Flower2,
   Footprints, Luggage, Loader2, Plus, PenLine, ClipboardList, ChartNoAxesColumn,
   MessageSquare, FolderOpen, Receipt, ExternalLink, Send, Circle, Plane, Search,
-  ChevronUp, ChevronDown,
+  ChevronUp, ChevronDown, Film, Clock,
 } from 'lucide-react'
 
 // Explicit name → component map (keeps the bundle small, surfaces typos).
@@ -19,7 +19,7 @@ const ICONS = {
   Menu, X, Lightbulb, Inbox, Building2, HeartHandshake, Bus, Palette, Package, Flower2,
   Footprints, Luggage, Loader2, Plus, PenLine, ClipboardList, ChartNoAxesColumn,
   MessageSquare, FolderOpen, Receipt, ExternalLink, Send, Circle, Plane, Search,
-  ChevronUp, ChevronDown,
+  ChevronUp, ChevronDown, Film, Clock,
 }
 const ICON_SIZE = { xs: 14, sm: 16, md: 18, lg: 20, xl: 24 }
 
